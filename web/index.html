@@ -19,7 +19,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="A Material Tracking & Costing App for SmartFab Industries">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -35,8 +35,30 @@
 
   <script>
     // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
+    var serviceWorkerVersion = null;
   </script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"></script>
+
+  <!-- Initialize Firebase -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAswDu-Hx7eh1NDwEVfplHR74i2EFL1tEE",
+      authDomain: "materialtrackingapp-b0710.firebaseapp.com",
+      projectId: "materialtrackingapp-b0710",
+      storageBucket: "materialtrackingapp-b0710.firebasestorage.app",
+      messagingSenderId: "236184901337",
+      appId: "1:236184901337:web:47e5f1c8a9b905d1e3d0c8"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>
@@ -56,26 +78,6 @@
         }
       });
     });
-  </script>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAswDu-Hx7eh1NDwEVfplHR74i2EFL1tEE",
-      authDomain: "materialtrackingapp-b0710.firebaseapp.com",
-      projectId: "materialtrackingapp-b0710",
-      storageBucket: "materialtrackingapp-b0710.firebasestorage.app",
-      messagingSenderId: "236184901337",
-      appId: "1:236184901337:web:47e5f1c8a9b905d1e3d0c8"
-    };
-
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
   </script>
 </body>
 

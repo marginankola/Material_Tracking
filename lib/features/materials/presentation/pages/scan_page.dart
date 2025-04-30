@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:material_tracking/features/materials/domain/models/material_model.dart';
-import 'package:material_tracking/features/materials/domain/models/consumption_model.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_bloc.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_event.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_state.dart';
-import 'package:uuid/uuid.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../domain/models/material_model.dart';
+import '../../domain/models/consumption_model.dart';
+import '../bloc/materials_bloc.dart';
+import '../bloc/materials_event.dart';
+import '../bloc/materials_state.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import 'package:uuid/uuid.dart';
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -16,68 +18,69 @@ class ScanPage extends StatefulWidget {
 }
 
 class _ScanPageState extends State<ScanPage> {
-  final _quantityController = TextEditingController();
-  final _batchNumberController = TextEditingController();
-  final _notesController = TextEditingController();
+  final GlobalKey<State<StatefulWidget>> _scannerKey =
+      GlobalKey<State<StatefulWidget>>();
+  final TextEditingController _quantityController = TextEditingController();
+  final TextEditingController _batchController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
   MaterialModel? _scannedMaterial;
-  final _scannerKey = GlobalKey<MobileScannerState>();
 
   @override
   void dispose() {
     _quantityController.dispose();
-    _batchNumberController.dispose();
+    _batchController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
-  void _onScanResult(BarcodeCapture barcode) {
-    final code = barcode.barcodes.first;
-    if (code.rawValue == null) return;
+  void _handleBarcodeDetected(Barcode barcode) {
+    if (barcode.rawValue == null) return;
 
-    final materialId = code.rawValue!;
+    final materialId = barcode.rawValue!;
     final materialsBloc = context.read<MaterialsBloc>();
-    final materials = materialsBloc.state.materials;
+    final state = materialsBloc.state;
+    if (state is! MaterialsLoaded) return;
 
-    final material = materials.firstWhere(
+    final material = state.materials.firstWhere(
       (m) => m.id == materialId,
-      orElse: () => null,
+      orElse: () => MaterialModel(
+        id: '',
+        name: '',
+        description: '',
+        unitCost: 0,
+        unitType: '',
+        currentStock: 0,
+        minimumStock: 0,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ),
     );
 
-    if (material != null) {
+    if (material.id.isNotEmpty) {
       setState(() {
         _scannedMaterial = material;
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Material not found'),
-          backgroundColor: Colors.red,
-        ),
-      );
     }
   }
 
-  void _consumeMaterial() {
+  void _handleConsume() {
     if (_scannedMaterial == null) return;
 
     final quantity = double.tryParse(_quantityController.text);
-    if (quantity == null || quantity <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid quantity'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    if (quantity == null || quantity <= 0) return;
+
+    final authState = context.read<AuthBloc>().state;
+    if (authState is! AuthAuthenticated) return;
 
     final consumption = ConsumptionModel(
       id: const Uuid().v4(),
       materialId: _scannedMaterial!.id,
       quantity: quantity,
-      batchNumber: _batchNumberController.text,
+      batchNumber: _batchController.text,
       notes: _notesController.text,
+      operatorId: authState.user.id,
       createdAt: DateTime.now(),
+      consumedAt: DateTime.now(),
     );
 
     context.read<MaterialsBloc>().add(
@@ -87,78 +90,84 @@ class _ScanPageState extends State<ScanPage> {
     setState(() {
       _scannedMaterial = null;
       _quantityController.clear();
-      _batchNumberController.clear();
+      _batchController.clear();
       _notesController.clear();
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Material consumed successfully'),
-        backgroundColor: Colors.green,
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Scan Material'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: MobileScanner(
-              key: _scannerKey,
-              onDetect: _onScanResult,
-            ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        if (authState is! AuthAuthenticated) {
+          return const Center(child: Text('Please login to scan materials'));
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Scan Material'),
           ),
-          if (_scannedMaterial != null) ...[
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Scanned Material: ${_scannedMaterial!.name}',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Quantity',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _batchNumberController,
-                    decoration: const InputDecoration(
-                      labelText: 'Batch Number',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _notesController,
-                    decoration: const InputDecoration(
-                      labelText: 'Notes',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _consumeMaterial,
-                    child: const Text('Consume Material'),
-                  ),
-                ],
+          body: Column(
+            children: [
+              Expanded(
+                child: MobileScanner(
+                  key: _scannerKey,
+                  onDetect: (capture) {
+                    final barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty) {
+                      _handleBarcodeDetected(barcodes.first);
+                    }
+                  },
+                ),
               ),
-            ),
-          ],
-        ],
-      ),
+              if (_scannedMaterial != null) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Scanned: ${_scannedMaterial!.name}',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _quantityController,
+                        decoration: const InputDecoration(
+                          labelText: 'Quantity',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _batchController,
+                        decoration: const InputDecoration(
+                          labelText: 'Batch Number',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _notesController,
+                        decoration: const InputDecoration(
+                          labelText: 'Notes',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _handleConsume,
+                        child: const Text('Consume Material'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

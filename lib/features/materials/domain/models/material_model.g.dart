@@ -21,9 +21,9 @@ class MaterialModelAdapter extends TypeAdapter<MaterialModel> {
       name: fields[1] as String,
       description: fields[2] as String,
       unitCost: fields[3] as double,
-      unitType: fields[4] as String,
-      currentStock: fields[5] as double,
-      minimumStock: fields[6] as double,
+      currentStock: fields[4] as double,
+      minimumStock: fields[5] as double,
+      unitType: fields[6] as String,
       createdAt: fields[7] as DateTime,
       updatedAt: fields[8] as DateTime,
     );
@@ -42,11 +42,11 @@ class MaterialModelAdapter extends TypeAdapter<MaterialModel> {
       ..writeByte(3)
       ..write(obj.unitCost)
       ..writeByte(4)
-      ..write(obj.unitType)
-      ..writeByte(5)
       ..write(obj.currentStock)
-      ..writeByte(6)
+      ..writeByte(5)
       ..write(obj.minimumStock)
+      ..writeByte(6)
+      ..write(obj.unitType)
       ..writeByte(7)
       ..write(obj.createdAt)
       ..writeByte(8)

@@ -5,41 +5,54 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'No web configuration provided. Follow Firebase setup documentation for web.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        return ios;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for ios - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.macOS:
-        throw UnsupportedError('MacOS is not supported.');
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
-        throw UnsupportedError('Windows is not supported.');
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.linux:
-        throw UnsupportedError('Linux is not supported.');
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for linux - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       default:
-        throw UnsupportedError('Unknown platform ${defaultTargetPlatform}');
+        throw UnsupportedError(
+          'DefaultFirebaseOptions are not supported for this platform.',
+        );
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR-ANDROID-API-KEY',
-    appId: 'YOUR-ANDROID-APP-ID',
-    messagingSenderId: 'YOUR-SENDER-ID',
-    projectId: 'YOUR-PROJECT-ID',
-    storageBucket: 'YOUR-STORAGE-BUCKET',
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAswDu-Hx7eh1NDwEVfplHR74i2EFL1tEE',
+    appId: '1:236184901337:web:47e5f1c8a9b905d1e3d0c8',
+    messagingSenderId: '236184901337',
+    projectId: 'materialtrackingapp-b0710',
+    authDomain: 'materialtrackingapp-b0710.firebaseapp.com',
+    storageBucket: 'materialtrackingapp-b0710.firebasestorage.app',
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR-IOS-API-KEY',
-    appId: 'YOUR-IOS-APP-ID',
-    messagingSenderId: 'YOUR-SENDER-ID',
-    projectId: 'YOUR-PROJECT-ID',
-    storageBucket: 'YOUR-STORAGE-BUCKET',
-    iosClientId: 'YOUR-IOS-CLIENT-ID',
-    iosBundleId: 'YOUR-IOS-BUNDLE-ID',
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyAswDu-Hx7eh1NDwEVfplHR74i2EFL1tEE',
+    appId: '1:236184901337:android:47e5f1c8a9b905d1e3d0c8',
+    messagingSenderId: '236184901337',
+    projectId: 'materialtrackingapp-b0710',
+    storageBucket: 'materialtrackingapp-b0710.firebasestorage.app',
+    androidClientId:
+        '236184901337-47e5f1c8a9b905d1e3d0c8.apps.googleusercontent.com',
   );
 }

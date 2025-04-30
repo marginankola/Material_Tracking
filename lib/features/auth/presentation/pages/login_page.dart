@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:material_tracking/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:material_tracking/features/auth/presentation/bloc/auth_event.dart';
+import 'package:material_tracking/features/auth/presentation/bloc/auth_state.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -87,8 +88,8 @@ class _LoginPageState extends State<LoginPage> {
                                 if (_formKey.currentState!.validate()) {
                                   context.read<AuthBloc>().add(
                                         AuthLoginRequested(
-                                          _emailController.text,
-                                          _passwordController.text,
+                                          email: _emailController.text,
+                                          password: _passwordController.text,
                                         ),
                                       );
                                 }

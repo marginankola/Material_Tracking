@@ -8,18 +8,17 @@ class FirebaseService {
   factory FirebaseService() => _instance;
   FirebaseService._internal();
 
-  late final FirebaseAuth _auth;
   late final FirebaseFirestore _firestore;
+  late final FirebaseAuth _auth;
   late final FirebaseStorage _storage;
 
-  FirebaseAuth get auth => _auth;
   FirebaseFirestore get firestore => _firestore;
+  FirebaseAuth get auth => _auth;
   FirebaseStorage get storage => _storage;
 
   Future<void> initialize() async {
-    await Firebase.initializeApp();
-    _auth = FirebaseAuth.instance;
     _firestore = FirebaseFirestore.instance;
+    _auth = FirebaseAuth.instance;
     _storage = FirebaseStorage.instance;
 
     // Enable offline persistence

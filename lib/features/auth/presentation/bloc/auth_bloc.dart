@@ -7,68 +7,96 @@ import 'package:material_tracking/features/auth/presentation/bloc/auth_state.dar
 
 // Bloc
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository authRepository;
+  final AuthRepository _repository;
 
-  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
-    on<AuthLoginRequested>(_onLogin);
-    on<AuthRegisterRequested>(_onRegister);
-    on<AuthLogoutRequested>(_onLogout);
-    on<AuthCheckRequested>(_onCheckAuthStatus);
+  AuthBloc({required AuthRepository repository})
+      : _repository = repository,
+        super(AuthInitial()) {
+    on<AuthCheckRequested>(_onAuthCheckRequested);
+    on<AuthLoginRequested>(_onAuthLoginRequested);
+    on<AuthRegisterRequested>(_onAuthRegisterRequested);
+    on<AuthLogoutRequested>(_onAuthLogoutRequested);
+    on<AuthUpdateProfileRequested>(_onAuthUpdateProfileRequested);
   }
 
-  Future<void> _onLogin(
-      AuthLoginRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
-    try {
-      final user = await authRepository.signInWithEmailAndPassword(
-        event.email,
-        event.password,
-      );
-      emit(Authenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
-  }
-
-  Future<void> _onRegister(
-      AuthRegisterRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
-    try {
-      final user = await authRepository.createUser(
-        event.email,
-        event.password,
-        event.name,
-        UserRole.values.firstWhere((role) => role.toString() == event.role),
-      );
-      emit(Authenticated(user));
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
-  }
-
-  Future<void> _onLogout(
-      AuthLogoutRequested event, Emitter<AuthState> emit) async {
-    emit(AuthLoading());
-    try {
-      await authRepository.signOut();
-      emit(Unauthenticated());
-    } catch (e) {
-      emit(AuthError(e.toString()));
-    }
-  }
-
-  Future<void> _onCheckAuthStatus(
+  Future<void> _onAuthCheckRequested(
     AuthCheckRequested event,
     Emitter<AuthState> emit,
   ) async {
-    emit(AuthLoading());
     try {
-      final user = await authRepository.getCurrentUser();
+      emit(AuthLoading());
+      final user = await _repository.getCurrentUser();
       if (user != null) {
-        emit(Authenticated(user));
+        emit(AuthAuthenticated(user));
       } else {
-        emit(Unauthenticated());
+        emit(AuthUnauthenticated());
       }
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthLoginRequested(
+    AuthLoginRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+      final user = await _repository.login(
+        email: event.email,
+        password: event.password,
+      );
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthRegisterRequested(
+    AuthRegisterRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+      final user = await _repository.register(
+        name: event.name,
+        email: event.email,
+        password: event.password,
+      );
+      emit(AuthAuthenticated(user));
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthLogoutRequested(
+    AuthLogoutRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      emit(AuthLoading());
+      await _repository.logout();
+      emit(AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  Future<void> _onAuthUpdateProfileRequested(
+    AuthUpdateProfileRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      if (state is! AuthAuthenticated) {
+        throw Exception('User not authenticated');
+      }
+
+      emit(AuthLoading());
+      final user = await _repository.updateProfile(
+        name: event.name,
+        password: event.password,
+      );
+      emit(AuthAuthenticated(user));
     } catch (e) {
       emit(AuthError(e.toString()));
     }

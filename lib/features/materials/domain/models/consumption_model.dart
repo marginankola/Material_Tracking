@@ -11,22 +11,22 @@ class ConsumptionModel {
   final String materialId;
 
   @HiveField(2)
-  final double quantity;
-
-  @HiveField(3)
-  final String batchNumber;
-
-  @HiveField(4)
-  final String? notes;
-
-  @HiveField(5)
   final String operatorId;
 
+  @HiveField(3)
+  final double quantity;
+
+  @HiveField(4)
+  final String? batchNumber;
+
+  @HiveField(5)
+  final String? notes;
+
   @HiveField(6)
-  final DateTime createdAt;
+  final DateTime consumedAt;
 
   @HiveField(7)
-  final DateTime consumedAt;
+  final DateTime createdAt;
 
   @HiveField(8)
   final String? productId;
@@ -34,12 +34,12 @@ class ConsumptionModel {
   ConsumptionModel({
     required this.id,
     required this.materialId,
-    required this.quantity,
-    required this.batchNumber,
-    this.notes,
     required this.operatorId,
-    required this.createdAt,
+    required this.quantity,
+    this.batchNumber,
+    this.notes,
     required this.consumedAt,
+    required this.createdAt,
     this.productId,
   });
 
@@ -47,12 +47,12 @@ class ConsumptionModel {
     return ConsumptionModel(
       id: json['id'] as String,
       materialId: json['materialId'] as String,
-      quantity: (json['quantity'] as num).toDouble(),
-      batchNumber: json['batchNumber'] as String,
-      notes: json['notes'] as String?,
       operatorId: json['operatorId'] as String,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      quantity: (json['quantity'] as num).toDouble(),
+      batchNumber: json['batchNumber'] as String?,
+      notes: json['notes'] as String?,
       consumedAt: DateTime.parse(json['consumedAt'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
       productId: json['productId'] as String?,
     );
   }
@@ -61,12 +61,12 @@ class ConsumptionModel {
     return {
       'id': id,
       'materialId': materialId,
+      'operatorId': operatorId,
       'quantity': quantity,
       'batchNumber': batchNumber,
       'notes': notes,
-      'operatorId': operatorId,
-      'createdAt': createdAt.toIso8601String(),
       'consumedAt': consumedAt.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
       'productId': productId,
     };
   }

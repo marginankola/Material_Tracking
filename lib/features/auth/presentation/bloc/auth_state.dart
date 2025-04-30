@@ -1,27 +1,27 @@
 import 'package:equatable/equatable.dart';
-import 'package:material_tracking/features/auth/domain/models/user_model.dart';
+import '../../domain/models/user_model.dart';
 
 abstract class AuthState extends Equatable {
   const AuthState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class AuthInitial extends AuthState {}
 
 class AuthLoading extends AuthState {}
 
-class Authenticated extends AuthState {
+class AuthAuthenticated extends AuthState {
   final UserModel user;
 
-  const Authenticated(this.user);
+  const AuthAuthenticated(this.user);
 
   @override
-  List<Object> get props => [user];
+  List<Object?> get props => [user];
 }
 
-class Unauthenticated extends AuthState {}
+class AuthUnauthenticated extends AuthState {}
 
 class AuthError extends AuthState {
   final String message;
@@ -29,5 +29,5 @@ class AuthError extends AuthState {
   const AuthError(this.message);
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message];
 }

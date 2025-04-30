@@ -49,13 +49,18 @@ class LocalMaterialsRepository implements MaterialsRepository {
     return MaterialModel.fromJson(Map<String, dynamic>.from(json));
   }
 
+  Future<void> cacheMaterial(MaterialModel material) async {
+    final box = Hive.box<Map>(materialsBox);
+    await box.put(material.id, material.toJson());
+  }
+
   // Consumptions
   Future<void> cacheConsumptions(List<ConsumptionModel> consumptions) async {
     final box = Hive.box<Map>(consumptionsBox);
-    await box.clear();
-    await box.putAll(
-      Map.fromEntries(consumptions.map((c) => MapEntry(c.id, c.toJson()))),
-    );
+    final Map<String, Map> data = {
+      for (var consumption in consumptions) consumption.id: consumption.toJson()
+    };
+    await box.putAll(data);
   }
 
   Future<List<ConsumptionModel>> getCachedConsumptions() async {
@@ -65,6 +70,11 @@ class LocalMaterialsRepository implements MaterialsRepository {
           (json) => ConsumptionModel.fromJson(Map<String, dynamic>.from(json)),
         )
         .toList();
+  }
+
+  Future<void> cacheConsumption(ConsumptionModel consumption) async {
+    final box = Hive.box<Map>(consumptionsBox);
+    await box.put(consumption.id, consumption.toJson());
   }
 
   // Pending Consumptions (for offline mode)

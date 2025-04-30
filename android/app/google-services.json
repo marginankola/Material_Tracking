@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "236184901337",
+    "project_id": "materialtrackingapp-b0710",
+    "storage_bucket": "materialtrackingapp-b0710.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:236184901337:android:47e5f1c8a9b905d1e3d0c8",
+        "android_client_info": {
+          "package_name": "com.example.material"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAswDu-Hx7eh1NDwEVfplHR74i2EFL1tEE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+} 

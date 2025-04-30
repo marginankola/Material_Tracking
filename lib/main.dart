@@ -9,6 +9,7 @@ import 'package:material_tracking/features/auth/data/repositories/auth_repositor
 import 'package:material_tracking/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:material_tracking/features/auth/presentation/bloc/auth_event.dart';
 import 'package:material_tracking/features/auth/presentation/pages/login_page.dart';
+import 'package:material_tracking/features/auth/presentation/pages/splash_page.dart';
 import 'package:material_tracking/features/materials/data/repositories/firebase_materials_repository.dart';
 import 'package:material_tracking/features/materials/data/repositories/local_materials_repository.dart';
 import 'package:material_tracking/features/materials/domain/models/material_model.dart';
@@ -21,65 +22,76 @@ import 'package:material_tracking/features/materials/presentation/pages/material
 import 'package:material_tracking/features/materials/presentation/pages/consumption_history_page.dart';
 import 'package:material_tracking/features/materials/presentation/pages/consumption_details_page.dart';
 import 'package:material_tracking/features/materials/presentation/pages/reports_page.dart';
+import 'package:material_tracking/features/settings/presentation/pages/settings_page.dart';
+import 'package:material_tracking/features/auth/presentation/pages/users_page.dart';
 import 'package:material_tracking/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    // Initialize Firebase with the configuration
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  // Initialize Hive
-  await Hive.initFlutter();
-  Hive.registerAdapter(MaterialModelAdapter());
-  Hive.registerAdapter(ConsumptionModelAdapter());
-  await Hive.openBox<MaterialModel>('materials');
-  await Hive.openBox<ConsumptionModel>('consumptions');
+    // Initialize Firebase services
+    final firebaseService = FirebaseService();
+    await firebaseService.initialize();
 
-  // Initialize services
-  final firebaseService = FirebaseService();
-  await firebaseService.initialize();
-  final connectivityService = ConnectivityService();
+    // Initialize Hive
+    await Hive.initFlutter();
 
-  // Initialize repositories
-  final firebaseRepository = FirebaseMaterialsRepository(firebaseService);
-  final localRepository = LocalMaterialsRepository(
-    materialsBox: Hive.box<MaterialModel>('materials'),
-    consumptionsBox: Hive.box<ConsumptionModel>('consumptions'),
-  );
-  final authRepository = AuthRepositoryImpl();
+    // Register adapters
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(MaterialModelAdapter());
+    }
+    if (!Hive.isAdapterRegistered(1)) {
+      Hive.registerAdapter(ConsumptionModelAdapter());
+    }
 
-  runApp(MaterialTrackingApp(
-    firebaseRepository: firebaseRepository,
-    localRepository: localRepository,
-    connectivityService: connectivityService,
-    authRepository: authRepository,
-  ));
+    // Open boxes with proper types
+    await Hive.openBox<Map>('users');
+    await Hive.openBox<MaterialModel>('materials');
+    await Hive.openBox<ConsumptionModel>('consumptions');
+    await Hive.openBox<Map>('products');
+  } catch (e) {
+    print('Error initializing app: $e');
+    // Handle initialization error gracefully
+    runApp(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Text('Error initializing app: $e'),
+          ),
+        ),
+      ),
+    );
+    return;
+  }
+
+  runApp(const MaterialTrackingApp());
 }
 
 class MaterialTrackingApp extends StatelessWidget {
-  final FirebaseMaterialsRepository firebaseRepository;
-  final LocalMaterialsRepository localRepository;
-  final ConnectivityService connectivityService;
-  final AuthRepositoryImpl authRepository;
-
-  const MaterialTrackingApp({
-    super.key,
-    required this.firebaseRepository,
-    required this.localRepository,
-    required this.connectivityService,
-    required this.authRepository,
-  });
+  const MaterialTrackingApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final firebaseService = FirebaseService();
+    final connectivityService = ConnectivityService();
+    final authRepository = AuthRepositoryImpl();
+    final firebaseRepository = FirebaseMaterialsRepository(firebaseService);
+    final localRepository = LocalMaterialsRepository(
+      materialsBox: Hive.box<MaterialModel>('materials'),
+      consumptionsBox: Hive.box<ConsumptionModel>('consumptions'),
+    );
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => AuthBloc(authRepository: authRepository)
-            ..add(AuthCheckRequested()),
+          create: (context) =>
+              AuthBloc(repository: authRepository)..add(AuthCheckRequested()),
         ),
         BlocProvider(
           create: (context) => MaterialsBloc(
@@ -95,8 +107,27 @@ class MaterialTrackingApp extends StatelessWidget {
           primarySwatch: Colors.blue,
           useMaterial3: true,
         ),
-        initialRoute: AppRoutes.splash,
-        onGenerateRoute: AppRoutes.onGenerateRoute,
+        initialRoute: '/splash',
+        routes: {
+          '/splash': (context) => const SplashPage(),
+          '/login': (context) => const LoginPage(),
+          '/home': (context) => const HomePage(),
+          '/users': (context) => const UsersPage(),
+          '/settings': (context) => const SettingsPage(),
+          '/add-material': (context) => const AddMaterialPage(),
+          '/material-details': (context) {
+            final material =
+                ModalRoute.of(context)!.settings.arguments as MaterialModel;
+            return MaterialDetailsPage(material: material);
+          },
+          '/consumption-history': (context) => const ConsumptionHistoryPage(),
+          '/consumption-details': (context) {
+            final consumption =
+                ModalRoute.of(context)!.settings.arguments as ConsumptionModel;
+            return ConsumptionDetailsPage(consumption: consumption);
+          },
+          '/reports': (context) => const ReportsPage(),
+        },
       ),
     );
   }

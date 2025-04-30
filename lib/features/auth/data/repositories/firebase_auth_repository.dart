@@ -16,63 +16,74 @@ class FirebaseAuthRepository implements AuthRepository {
     final user = _auth.currentUser;
     if (user == null) return null;
 
-    final doc =
-        await _firestore.collection(_usersCollection).doc(user.uid).get();
-    if (!doc.exists) return null;
+    try {
+      final doc =
+          await _firestore.collection(_usersCollection).doc(user.uid).get();
+      if (!doc.exists) return null;
 
-    return UserModel.fromJson({'id': doc.id, ...doc.data()!});
+      return UserModel.fromJson({
+        'id': doc.id,
+        ...doc.data()!,
+      });
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to get current user: ${e.message}');
+    }
   }
 
   @override
-  Future<UserModel> signInWithEmailAndPassword(
-    String email,
-    String password,
-  ) async {
+  Future<UserModel> login({
+    required String email,
+    required String password,
+  }) async {
     try {
-      final userCredential = await _auth.signInWithEmailAndPassword(
+      final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final doc =
-          await _firestore
-              .collection(_usersCollection)
-              .doc(userCredential.user!.uid)
-              .get();
+      if (credential.user == null) {
+        throw Exception('Failed to login');
+      }
+
+      final doc = await _firestore
+          .collection(_usersCollection)
+          .doc(credential.user!.uid)
+          .get();
 
       if (!doc.exists) {
         throw Exception('User data not found');
       }
 
-      return UserModel.fromJson({'id': doc.id, ...doc.data()!});
-    } catch (e) {
-      throw Exception('Failed to sign in: ${e.toString()}');
+      return UserModel.fromJson({
+        'id': doc.id,
+        ...doc.data()!,
+      });
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to login: ${e.message}');
     }
   }
 
   @override
-  Future<void> signOut() async {
-    await _auth.signOut();
-  }
-
-  @override
-  Future<UserModel> createUser(
-    String email,
-    String password,
-    String name,
-    UserRole role,
-  ) async {
+  Future<UserModel> register({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      final credential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      if (credential.user == null) {
+        throw Exception('Failed to create user');
+      }
+
       final user = UserModel(
-        id: userCredential.user!.uid,
-        email: email,
+        id: credential.user!.uid,
         name: name,
-        role: role,
+        email: email,
+        role: UserRole.operator,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -83,43 +94,94 @@ class FirebaseAuthRepository implements AuthRepository {
           .set(user.toJson());
 
       return user;
-    } catch (e) {
-      throw Exception('Failed to create user: ${e.toString()}');
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to register: ${e.message}');
     }
   }
 
   @override
-  Future<void> deleteUser(String userId) async {
+  Future<void> logout() async {
     try {
-      await _firestore.collection(_usersCollection).doc(userId).delete();
-      // Note: The user must be re-authenticated before deleting their account
+      await _auth.signOut();
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to logout: ${e.message}');
+    }
+  }
+
+  @override
+  Future<UserModel> updateProfile({
+    required String name,
+    String? password,
+  }) async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      if (password != null) {
+        await user.updatePassword(password);
+      }
+
+      final doc =
+          await _firestore.collection(_usersCollection).doc(user.uid).get();
+      if (!doc.exists) {
+        throw Exception('User data not found');
+      }
+
+      final updatedUser = UserModel.fromJson({
+        'id': doc.id,
+        ...doc.data()!,
+      }).copyWith(
+        name: name,
+        updatedAt: DateTime.now(),
+      );
+
+      await _firestore
+          .collection(_usersCollection)
+          .doc(user.uid)
+          .update(updatedUser.toJson());
+
+      return updatedUser;
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to update profile: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> deleteUser(String id) async {
+    try {
+      await _firestore.collection(_usersCollection).doc(id).delete();
       await _auth.currentUser?.delete();
-    } catch (e) {
-      throw Exception('Failed to delete user: ${e.toString()}');
-    }
-  }
-
-  @override
-  Future<void> updateUserRole(String userId, UserRole newRole) async {
-    try {
-      await _firestore.collection(_usersCollection).doc(userId).update({
-        'role': newRole.toString(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw Exception('Failed to update user role: ${e.toString()}');
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to delete user: ${e.message}');
     }
   }
 
   @override
   Future<List<UserModel>> getAllUsers() async {
     try {
-      final querySnapshot = await _firestore.collection(_usersCollection).get();
-      return querySnapshot.docs
-          .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
+      final snapshot = await _firestore.collection(_usersCollection).get();
+      return snapshot.docs
+          .map((doc) => UserModel.fromJson({
+                'id': doc.id,
+                ...doc.data(),
+              }))
           .toList();
-    } catch (e) {
-      throw Exception('Failed to get users: ${e.toString()}');
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to get users: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> updateUserRole(String id, UserRole role) async {
+    try {
+      await _firestore.collection(_usersCollection).doc(id).update({
+        'role': role.name,
+        'updatedAt': DateTime.now().toIso8601String(),
+      });
+    } on FirebaseException catch (e) {
+      throw Exception('Failed to update user role: ${e.message}');
     }
   }
 }

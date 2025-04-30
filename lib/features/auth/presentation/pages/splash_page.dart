@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:material_tracking/features/auth/presentation/bloc/auth_bloc.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_state.dart';
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
@@ -9,11 +10,9 @@ class SplashPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is Authenticated) {
-          // Navigate to home page
+        if (state is AuthAuthenticated) {
           Navigator.pushReplacementNamed(context, '/home');
-        } else if (state is Unauthenticated) {
-          // Navigate to login page
+        } else if (state is AuthUnauthenticated) {
           Navigator.pushReplacementNamed(context, '/login');
         }
       },
@@ -24,10 +23,7 @@ class SplashPage extends StatelessWidget {
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
-              Text(
-                'Material Tracking',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              Text('Loading...'),
             ],
           ),
         ),

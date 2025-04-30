@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:material_tracking/features/auth/domain/models/user_model.dart';
-import 'package:material_tracking/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:material_tracking/features/auth/presentation/bloc/auth_event.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_bloc.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_event.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_state.dart';
-import 'package:material_tracking/features/materials/presentation/widgets/low_stock_alert.dart';
-import 'package:material_tracking/features/materials/presentation/widgets/material_list.dart';
-import 'package:material_tracking/features/materials/presentation/widgets/recent_consumptions.dart';
-import 'package:material_tracking/features/materials/presentation/widgets/stats_card.dart';
+import '../../../auth/domain/models/user_model.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../bloc/materials_bloc.dart';
+import '../bloc/materials_event.dart';
+import '../bloc/materials_state.dart';
+import '../widgets/low_stock_alert.dart';
+import '../widgets/material_list.dart';
+import '../widgets/recent_consumptions.dart';
+import '../widgets/stats_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -18,7 +19,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        if (authState is! Authenticated) {
+        if (authState is! AuthAuthenticated) {
           return const Center(child: CircularProgressIndicator());
         }
 

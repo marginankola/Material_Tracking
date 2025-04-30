@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_bloc.dart';
-import 'package:material_tracking/features/materials/presentation/bloc/materials_state.dart';
-import 'package:material_tracking/features/materials/domain/models/material_model.dart';
-import 'package:material_tracking/features/materials/domain/models/consumption_model.dart';
 import 'package:intl/intl.dart';
+import '../../domain/models/consumption_model.dart';
+import '../../domain/models/material_model.dart';
+import '../bloc/materials_bloc.dart';
+import '../bloc/materials_state.dart';
 
 class ConsumptionDetailsPage extends StatelessWidget {
   final ConsumptionModel consumption;
@@ -14,62 +14,55 @@ class ConsumptionDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Consumption Details')),
+      appBar: AppBar(
+        title: const Text('Consumption Details'),
+      ),
       body: BlocBuilder<MaterialsBloc, MaterialsState>(
         builder: (context, state) {
-          if (state is! MaterialsLoaded) {
+          if (state is MaterialsLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final material = state.materials.firstWhere(
-            (m) => m.id == consumption.materialId,
-            orElse: () => MaterialModel(
-              id: 'unknown',
-              name: 'Unknown Material',
-              description: '',
-              unitCost: 0,
-              unitType: '',
-              currentStock: 0,
-              minimumStock: 0,
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          );
+          final material = state is MaterialsLoaded
+              ? state.materials
+                  .firstWhere((m) => m.id == consumption.materialId)
+              : null;
+
+          if (material == null) {
+            return const Center(child: Text('Material not found'));
+          }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Material Information',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 16),
                         ListTile(
-                          leading: const Icon(Icons.inventory),
-                          title: const Text('Material Name'),
+                          title: const Text('Name'),
                           subtitle: Text(material.name),
                         ),
                         ListTile(
-                          leading: const Icon(Icons.description),
                           title: const Text('Description'),
                           subtitle: Text(material.description),
                         ),
                         ListTile(
-                          leading: const Icon(Icons.attach_money),
                           title: const Text('Unit Cost'),
                           subtitle: Text(
-                            '\$${material.unitCost.toStringAsFixed(2)} per ${material.unitType}',
+                            NumberFormat.currency(
+                              symbol: '₹',
+                              decimalDigits: 2,
+                            ).format(material.unitCost),
                           ),
                         ),
                       ],
@@ -79,42 +72,39 @@ class ConsumptionDetailsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Consumption Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 16),
                         ListTile(
-                          leading: const Icon(Icons.scale),
                           title: const Text('Quantity Consumed'),
                           subtitle: Text(
                             '${consumption.quantity} ${material.unitType}',
                           ),
                         ),
                         ListTile(
-                          leading: const Icon(Icons.money),
                           title: const Text('Total Cost'),
                           subtitle: Text(
-                            '\$${(material.unitCost * consumption.quantity).toStringAsFixed(2)}',
+                            NumberFormat.currency(
+                              symbol: '₹',
+                              decimalDigits: 2,
+                            ).format(consumption.quantity * material.unitCost),
                           ),
                         ),
-                        ListTile(
-                          leading: const Icon(Icons.batch_prediction),
-                          title: const Text('Batch Number'),
-                          subtitle: Text(consumption.batchNumber),
-                        ),
-                        if (consumption.notes?.isNotEmpty ?? false)
+                        if (consumption.batchNumber != null)
                           ListTile(
-                            leading: const Icon(Icons.note),
+                            title: const Text('Batch Number'),
+                            subtitle: Text(consumption.batchNumber!),
+                          ),
+                        if (consumption.notes != null)
+                          ListTile(
                             title: const Text('Notes'),
-                            subtitle: Text(consumption.notes ?? ''),
+                            subtitle: Text(consumption.notes!),
                           ),
                       ],
                     ),
@@ -123,34 +113,27 @@ class ConsumptionDetailsPage extends StatelessWidget {
                 const SizedBox(height: 16),
                 Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Timestamps',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 16),
                         ListTile(
-                          leading: const Icon(Icons.calendar_today),
                           title: const Text('Consumed At'),
                           subtitle: Text(
-                            DateFormat(
-                              'MMM d, y h:mm a',
-                            ).format(consumption.consumedAt),
+                            DateFormat('dd MMM yyyy, hh:mm a')
+                                .format(consumption.consumedAt),
                           ),
                         ),
                         ListTile(
-                          leading: const Icon(Icons.create),
                           title: const Text('Record Created At'),
                           subtitle: Text(
-                            DateFormat(
-                              'MMM d, y h:mm a',
-                            ).format(consumption.createdAt),
+                            DateFormat('dd MMM yyyy, hh:mm a')
+                                .format(consumption.createdAt),
                           ),
                         ),
                       ],

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:material_tracking/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:material_tracking/features/auth/presentation/bloc/auth_state.dart';
-import 'package:material_tracking/features/auth/domain/models/user_model.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_state.dart';
+import '../../domain/models/user_model.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 class UsersPage extends StatelessWidget {
   const UsersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final repository = RepositoryProvider.of<AuthRepository>(context);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Users'),
@@ -29,9 +32,9 @@ class UsersPage extends StatelessWidget {
           if (state is AuthError) {
             return Center(child: Text(state.message));
           }
-          if (state is Authenticated) {
+          if (state is AuthAuthenticated) {
             return FutureBuilder<List<UserModel>>(
-              future: context.read<AuthBloc>().authRepository.getAllUsers(),
+              future: repository.getAllUsers(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -53,7 +56,7 @@ class UsersPage extends StatelessWidget {
                       ),
                       title: Text(user.name),
                       subtitle: Text(user.email),
-                      trailing: Text(user.role.toString()),
+                      trailing: Text(user.role.name),
                       onTap: () {
                         // TODO: Implement user details/edit functionality
                       },

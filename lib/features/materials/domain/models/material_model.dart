@@ -14,11 +14,11 @@ class MaterialModel {
   @HiveField(3)
   final double unitCost;
   @HiveField(4)
-  final String unitType;
-  @HiveField(5)
   final double currentStock;
-  @HiveField(6)
+  @HiveField(5)
   final double minimumStock;
+  @HiveField(6)
+  final String unitType;
   @HiveField(7)
   final DateTime createdAt;
   @HiveField(8)
@@ -29,9 +29,9 @@ class MaterialModel {
     required this.name,
     required this.description,
     required this.unitCost,
-    required this.unitType,
     required this.currentStock,
     required this.minimumStock,
+    required this.unitType,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -41,9 +41,9 @@ class MaterialModel {
     String? name,
     String? description,
     double? unitCost,
-    String? unitType,
     double? currentStock,
     double? minimumStock,
+    String? unitType,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -52,9 +52,9 @@ class MaterialModel {
       name: name ?? this.name,
       description: description ?? this.description,
       unitCost: unitCost ?? this.unitCost,
-      unitType: unitType ?? this.unitType,
       currentStock: currentStock ?? this.currentStock,
       minimumStock: minimumStock ?? this.minimumStock,
+      unitType: unitType ?? this.unitType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -66,11 +66,11 @@ class MaterialModel {
       'name': name,
       'description': description,
       'unitCost': unitCost,
-      'unitType': unitType,
       'currentStock': currentStock,
       'minimumStock': minimumStock,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
+      'unitType': unitType,
+      'createdAt': createdAt.toIso8601String(),
+      'updatedAt': updatedAt.toIso8601String(),
     };
   }
 
@@ -80,11 +80,11 @@ class MaterialModel {
       name: json['name'] as String,
       description: json['description'] as String,
       unitCost: (json['unitCost'] as num).toDouble(),
-      unitType: json['unitType'] as String,
       currentStock: (json['currentStock'] as num).toDouble(),
       minimumStock: (json['minimumStock'] as num).toDouble(),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
-      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
+      unitType: json['unitType'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
   }
 }
